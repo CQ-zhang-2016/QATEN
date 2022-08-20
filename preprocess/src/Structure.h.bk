@@ -1,0 +1,38 @@
+#ifndef STRUCTURE_H_
+#define STRUCTURE_H_
+
+#include <string>
+#include <map>
+#include <utility>
+#include <set>
+
+#include "Chain.h"
+
+using namespace std;
+
+class Structure {
+
+private:
+
+	map<pair<int, char>, Chain> chains;
+
+	//set<char> chain_ids; // unique chain IDs
+	//set<int> model_ids; // unique model IDs
+
+	vector<pair<int, char> > keys;
+
+public:
+
+	Structure();
+	Structure(const std::string name);
+	Structure(const Structure &source);
+
+	~Structure();
+
+	vector<pair<int, char> > GetChainIDs();
+
+	Chain* GetChain(int model, char ch);
+
+};
+
+#endif /* STRUCTURE_H_ */

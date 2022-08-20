@@ -1,0 +1,327 @@
+/*
+ * Structure.cpp
+ *
+ *  Created on: Aug 3, 2016
+ *      Author: ivan
+ */
+
+#include <cstring>
+#include <algorithm>
+
+#include "Structure.h"
+#include "Info.h"
+
+Structure::Structure(const std::string name) :
+		Structure(name.c_str()) {
+
+	/* */
+
+}
+
+Structure::Structure(const char *name) :
+		resolution(-1.0), nmodels(0) {
+
+	/* open file */
+	FILE *F;
+	F = fopen(name, "r");
+	if (F == NULL) {
+		fprintf(stderr, "ERROR: Can't open file %s\n", name);
+		exit(1);
+	}
+
+	/* read file line by line */
+	char buf[81];
+
+	std::map<std::pair<int, char>, std::vector<std::string> > chain_str;
+
+	int model_idx = 1;
+
+	while (fgets(buf, 81, F) != NULL) {
+
+		/* HEADER */
+		if (strncmp(buf, "HEADER", 6) == 0) {
+
+			/* deposition date */
+			buf[59] = '\0';
+			depDate = std::string(buf + 50);
+
+			/* classification of the molecule(s) */
+			int idx = 50;
+			while (buf[--idx] == ' ') {
+			}
+			buf[idx + 1] = '\0';
+			classification = std::string(buf + 10);
+
+		} else
+
+		/* EXPDTA */
+		if (strncmp(buf, "EXPDTA", 6) == 0) {
+			int idx = 79;
+			while (buf[--idx] == ' ') {
+			}
+			buf[idx + 1] = '\0';
+			expData = std::string(buf + 10);
+		} else
+
+		/* SEQRES */
+		if (strncmp(buf, "SEQRES", 6) == 0) {
+			char id = buf[11];
+			char * pch;
+			pch = strtok(buf + 19, " ");
+			while (pch != NULL) {
+				sequence[id] += To1letter(pch);
+				pch = strtok(NULL, " ");
+			}
+		} else
+
+		/* REMARK 2 */
+		if (strncmp(buf, "REMARK   2", 10) == 0) {
+			double res;
+			if (sscanf(buf + 23, "%lf", &res) == 1) {
+				resolution = res;
+			}
+		} else
+
+		/* MODEL */
+		if (strncmp(buf, "MODEL", 5) == 0) {
+			nmodels++;
+			sscanf(buf, "MODEL %d\n", &model_idx);
+		} else
+
+		/* ATOM */
+		if (strncmp(buf, "ATOM", 4) == 0) {
+			//chain_str[ { nmodels, buf[21] }].push_back(buf);
+			chain_str[ { model_idx, buf[21] }].push_back(buf);
+		}
+
+		/* HETATM: MSE->MET (selenomethionine) */
+		if (strncmp(buf, "HETATM", 6) == 0
+				&& strncmp(buf + 17, "MSE", 3) == 0) {
+			buf[18] = 'E';
+			buf[19] = 'T';
+			if (strncmp(buf + 12, "SE  ", 4) == 0
+					|| strncmp(buf + 12, " SE ", 4) == 0
+					|| strncmp(buf + 12, "  SE", 4) == 0) {
+				strncpy(buf + 12, " SD ", 4);
+				buf[76] = ' ';
+				buf[77] = 'S';
+			}
+			//chain_str[ { nmodels, buf[21] }].push_back(buf);
+			chain_str[ { model_idx, buf[21] }].push_back(buf);
+		}
+
+		/* HETATM: MLY->LYS (n-dimethyl-lysine) */
+		if (strncmp(buf, "HETATM", 6) == 0
+				&& strncmp(buf + 17, "MLY", 3) == 0) {
+			if (strncmp(buf + 12, " CH1", 4) == 0
+					|| strncmp(buf + 12, "CH1 ", 4) == 0
+					|| strncmp(buf + 12, " CH2", 4) == 0
+					|| strncmp(buf + 12, "CH2 ", 4) == 0) {
+				/* do not include methyl groups */
+				continue;
+			}
+			buf[17] = 'L';
+			buf[18] = 'Y';
+			buf[19] = 'S';
+//			chain_str[ { nmodels, buf[21] }].push_back(buf);
+			chain_str[ { model_idx, buf[21] }].push_back(buf);
+		}
+
+	}
+
+	fclose(F);
+
+	/* initialize Chains */
+	std::map<std::pair<int, char>, std::vector<std::string> >::iterator it;
+	for (it = chain_str.begin(); it != chain_str.end(); it++) {
+		chain[it->first] = Chain(it->second);
+		uniqChainIDs.insert(it->first.second);
+	}
+
+	/*
+	 printf("DATE:  '%s'\n", depDate.c_str());
+	 printf("DATA:  '%s'\n", expData.c_str());
+	 printf("CLASS: '%s'\n", classification.c_str());
+	 */
+
+}
+
+Structure::~Structure() {
+
+	/* nothing to be done */
+
+}
+
+Chain* Structure::GetChain(int model, char ch) {
+
+	std::map<std::pair<int, char>, Chain>::iterator it;
+	it = chain.find( { model, ch });
+	if (it == chain.end()) {
+		//printf("# Warning: cannot find chain '%c' in Model %d\n", ch, model);
+		return NULL;
+	}
+
+	return &(it->second);
+
+}
+
+Chain* Structure::GetChain(int nchain) {
+
+	if (nchain < 0 || nchain >= (int) chain.size()) {
+		//printf("Error: invalid chain number '%d'\n", nchain);
+		return NULL;
+	}
+
+	std::map<std::pair<int, char>, Chain>::iterator it = chain.begin();
+	for (int i = 0; i < nchain; i++) {
+		it++;
+	}
+
+	return &(it->second);
+
+}
+
+char Structure::To1letter(char* aaa) {
+
+	for (int i = 0; i < 26; i++) {
+		if (strcmp(aaa, AAA3[i]) == 0) {
+			return AAA1[i];
+		}
+	}
+//printf("%s\n", aaa);
+	return AAA1[24];
+
+}
+
+std::string Structure::GetSequence(char ch) {
+
+	std::map<char, std::string>::iterator it;
+	it = sequence.find(ch);
+	if (it != sequence.end()) {
+		return it->second;
+	} else {
+		printf("Error: sequence of chain '%c' not found\n", ch);
+		exit(1);
+	}
+
+}
+
+void Structure::SetSequence(std::string &seq, char ch) {
+
+	std::map<char, std::string>::iterator it;
+	it = sequence.find(ch);
+	if (it == sequence.end()) {
+		printf("# Warning: sequence of chain '%c' not found\n", ch);
+		sequence[ch] = seq;
+	} else {
+		it->second = seq;
+	}
+
+}
+
+std::string Structure::GetChainIDs() const {
+
+	std::string ids;
+	std::set<char>::iterator it;
+	for (it = uniqChainIDs.begin(); it != uniqChainIDs.end(); it++) {
+		ids += *it;
+	}
+
+	return ids;
+
+}
+
+std::vector<int> Structure::GetModelNums() const {
+
+	std::vector<int> models;
+
+	for (auto &a : chain) {
+		models.push_back(a.first.first);
+	}
+
+	std::sort(models.begin(), models.end());
+	std::vector<int>::iterator it;
+	it = std::unique(models.begin(), models.end());
+	models.resize(std::distance(models.begin(), it));
+
+	return models;
+
+}
+
+int Structure::GetNMod() {
+
+	return nmodels;
+
+}
+
+int Structure::GetNSeq() {
+
+//return (int) sequence.size();
+	return (int) uniqChainIDs.size();
+
+}
+
+int Structure::GetNChains() {
+
+	return (int) chain.size();
+
+}
+
+double Structure::GetResolution() {
+
+	return resolution;
+
+}
+
+std::string Structure::GetExpData() {
+
+	return expData;
+
+}
+
+void Structure::Save(const std::string &name) const {
+
+	FILE *F = fopen(name.c_str(), "w");
+	if (F == NULL) {
+		printf("Error: cannot open '%s' file for writing\n", name.c_str());
+		exit(1);
+	}
+
+	char ids[] = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz012345678";
+	int idx = 0;
+
+	for (const auto &a : chain) {
+		const Chain &C = a.second;
+		if (!C.nRes) {
+			continue;
+		}
+		char chainId = ids[idx];
+		for (int j = 0; j < C.nRes; j++) {
+			C.residue[j].chainId = chainId;
+		}
+		C.Save(F);
+		idx++;
+	}
+
+	/*
+	 int model_idx = -1;
+	 for (const auto &a : chain) {
+	 const Chain &C = a.second;
+	 if (C.nRes) {
+	 if (model_idx != a.first.first) {
+	 if (model_idx != -1) {
+	 fprintf(F, "ENDMDL\n");
+	 }
+	 model_idx = a.first.first;
+	 fprintf(F, "MODEL     %4d\n", model_idx);
+	 }
+	 C.Save(F);
+	 }
+	 }
+	 fprintf(F, "ENDMDL\n");
+	 fprintf(F, "END\n");
+	 */
+
+	fclose(F);
+
+}
