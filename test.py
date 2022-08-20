@@ -17,6 +17,9 @@ def main():
 	parser  = buildParser()
 	args    = parser.parse_args()
 	
+	try:os.mkdir(args.save_dir)
+	except:pass
+	
 	pdb2pkl(args.data_dir)
 
 	print('Torch Device being used: ', cfg.device)
