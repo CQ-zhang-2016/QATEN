@@ -22,7 +22,7 @@
   ```shell
   python test.py
   ```
-  Once successfully run, this creates feature files under the path `./data/`, and predicted global score and predicted local scores) under the path `./result/`.
+  Once successfully run, this creates feature files under the path `./data/`. Global score and local scores are predicted under the path `./result/`.
 
 Please cite the following paper if you use this code in your work.
 ```bibtex
