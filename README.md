@@ -5,7 +5,7 @@
 
 - Dependencies can be installed using the `requirements.txt` file.
 
-### Dataset:
+### Datasets:
 
 - We use DeepAccNet and GNNRefine datasets to train the QATEN, and use [CASP14](http://predictioncenter.org/download_area/CASP14/server_predictions/) and [RCSB](https://www.rcsb.org/) datasets for local(residue) and global Quality Assessment predictions. You can download them through [links](http://www.csbio.sjtu.edu.cn/bioinf/QATEN/).
 
