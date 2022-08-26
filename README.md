@@ -16,9 +16,11 @@
 
 1) Install all the requirements by executing `pip install -r requirements.txt.`
 
-2) move all the pdb files in `data` folder.
+2) Install required processing library by executing sh preprocess.sh which clones and installs [this](https://github.com/gjoni/mylddt) github repository.
 
-3) Quick run:
+3) move all the pdb files in `data` folder.
+
+4) Quick run:
   ```shell
   python test.py
   ```
