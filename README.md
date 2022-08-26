@@ -16,7 +16,7 @@
 
 1) Install all the requirements by executing `pip install -r requirements.txt.`
 
-2) Install required processing library by executing sh preprocess.sh which clones and installs [this](https://github.com/gjoni/mylddt) github repository.
+2) Install required processing library by executing `sh preprocess.sh` which clones and installs [this](https://github.com/gjoni/mylddt) github repository.
 
 3) move all the pdb files in `data` folder.
 
