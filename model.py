@@ -144,7 +144,7 @@ class ConvLayer(nn.Module):
 
 
 
-class ProteinGCN(nn.Module):
+class QATEN(nn.Module):
 	"""
 	Model to predict properties from protein graph - does all the convolution to get the protein embedding
 	"""
