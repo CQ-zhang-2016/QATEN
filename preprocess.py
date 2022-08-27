@@ -68,3 +68,4 @@ def pdb2pkl(datapath):
 			pickle.dump(directory.strip('.pdb'), file)
 
 	print('over!')
+	
