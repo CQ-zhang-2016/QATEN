@@ -149,7 +149,7 @@ class QATEN(nn.Module):
 	Model to predict properties from protein graph - does all the convolution to get the protein embedding
 	"""
 	def __init__(self, **kwargs):
-		super(ProteinGCN, self).__init__()
+		super(QATEN, self).__init__()
 
 		self.build(**kwargs)
 
