@@ -7,7 +7,7 @@ import shutil
 import torch
 import torch.nn as nn
 import torch.optim as optim
-from torch_scatter import scatter_add, scatter_max
+from torch_scatter import scatter_add
 
 from utils import randomSeed
 import config as cfg
